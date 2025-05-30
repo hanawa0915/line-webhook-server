@@ -43,7 +43,18 @@ app.post('/webhook', validateSignature, (req, res) => {
 app.get('/', (req, res) => {
   res.send('LINE Webhook Server is running!');
 });
+app.post('/webhook', validateSignature, (req, res) => {
+  console.log('✅ Webhook POST 受信');
 
+  const events = req.body.events;
+  if (!events) {
+    console.log('❌ eventsがありません');
+  } else {
+    console.log('📦 受信イベント:', JSON.stringify(events, null, 2));
+  }
+
+  res.status(200).send('OK');
+});
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`✅ Server listening on port ${PORT}`);
