@@ -59,3 +59,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`✅ Server listening on port ${PORT}`);
 });
+app.post('/webhook', validateSignature, (req, res) => {
+  console.log('✅ Webhook POST 受信');
+  console.log('📦 イベント内容:', JSON.stringify(req.body, null, 2));
+  ...
