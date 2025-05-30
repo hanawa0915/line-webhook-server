@@ -3,9 +3,8 @@ const bodyParser = require('body-parser');
 const crypto = require('crypto');
 const app = express();
 
-const CHANNEL_SECRET = process.env.CHANNEL_SECRET; // ← 環境変数にセットしておく
+const CHANNEL_SECRET = process.env.CHANNEL_SECRET;
 
-// 生のリクエストボディ保存用
 app.use(bodyParser.json({
   verify: (req, res, buf) => {
     req.rawBody = buf;
@@ -21,45 +20,44 @@ function validateSignature(req, res, next) {
     .digest('base64');
 
   if (signature === hash) {
+    console.log('✅ 署名検証成功');
     next();
   } else {
+    console.log('❌ 署名検証失敗');
     res.status(401).send('Unauthorized');
   }
 }
 
+// Webhook受信エンドポイント
 app.post('/webhook', validateSignature, (req, res) => {
+  console.log('📩 Webhook受信:', JSON.stringify(req.body, null, 2));
+
   const events = req.body.events;
-  if (events && events.length > 0) {
-    const source = events[0].source;
-    if (source.type === 'group') {
-      console.log('✅ グループID:', source.groupId);
-    } else if (source.type === 'user') {
-      console.log('✅ ユーザーID:', source.userId);
-    }
+  if (!events || events.length === 0) {
+    console.log('⚠️ イベントが空です');
+    return res.status(200).send('NO EVENTS');
   }
+
+  const source = events[0].source;
+
+  if (source.type === 'group') {
+    console.log('✅ グループID:', source.groupId);
+  } else if (source.type === 'user') {
+    console.log('✅ ユーザーID:', source.userId);
+  } else if (source.type === 'room') {
+    console.log('✅ ルームID:', source.roomId);
+  } else {
+    console.log('❓ 不明なsourceタイプ:', source);
+  }
+
   res.status(200).send('OK');
 });
 
 app.get('/', (req, res) => {
   res.send('LINE Webhook Server is running!');
 });
-app.post('/webhook', validateSignature, (req, res) => {
-  console.log('✅ Webhook POST 受信');
 
-  const events = req.body.events;
-  if (!events) {
-    console.log('❌ eventsがありません');
-  } else {
-    console.log('📦 受信イベント:', JSON.stringify(events, null, 2));
-  }
-
-  res.status(200).send('OK');
-});
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`✅ Server listening on port ${PORT}`);
 });
-app.post('/webhook', validateSignature, (req, res) => {
-  console.log('✅ Webhook POST 受信');
-  console.log('📦 イベント内容:', JSON.stringify(req.body, null, 2));
-  ...
